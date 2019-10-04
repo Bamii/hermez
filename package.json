@@ -1,0 +1,28 @@
+{
+  "name": "hermez",
+  "version": "1.0.0",
+  "description": "Cli to send files from pc to pc.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "cli",
+    "hermez",
+    "send files",
+    "file transfer"
+  ],
+  "author": "Ayo-Salami Ayobami",
+  "license": "ISC",
+  "bin": {
+    "hermez": "index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "ascii-art": "^1.5.1",
+    "readline-sync": "^1.4.10",
+    "ws": "^7.1.2"
+  }
+}
