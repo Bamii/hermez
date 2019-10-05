@@ -7,9 +7,7 @@ class Client {
   }
 
   connect() {
-    this.ws = new WebSocket('ws://localhost:4000', {
-      perMessageDeflate: false
-    });
+    this.ws = new WebSocket(`ws://${this.address}`);
 
     return this.ws;
   }

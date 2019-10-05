@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-
 const fs = require('fs');
-// const menu = require('./menu')
+const ip = require('ip');
+
 const {
   cls,
   sendFile,
@@ -40,11 +40,8 @@ function main() {
             displayCreationStatus(true, port);
             console.log();
             console.log('listening for connections...');
-            const exit = getInputFromUser('press m to disconnect and exit to menu:', 'm');
-
-            if (exit === "m") {
-              server.close(() => main());
-            }
+            console.log(server.address());
+            console.log(ip.address());
           })
           .on('error', (err) => {
             displayCreationStatus(false, err.code);
@@ -65,15 +62,18 @@ function main() {
       case "2":
         const WsClient = require('./wsClient');
 
-        const address = getInputFromUser('Please enter the address of the computer you wish to connect to: '); // , (input) => require('net').isIP(input)
+        const address = getInputFromUser('Please enter the address of the computer you wish to connect to: ');
         const client = new WsClient(address);
+        // console.log(client.connect())
         let filename = '';
         let writer;
         let start;
         let end;
 
-        client
+        let a = client
           .connect()
+
+        a
           .on('open', () => {
             cls();
             console.log("-----------------------------------------")
@@ -87,12 +87,15 @@ function main() {
           .on('close', () => {
             main();
           })
+          .on('error', (ws, err) => {
+            console.log('err', err);
+          })
           .on('message', (data) => {
               if (data === 'START') {
                 start = new Date();
               } else if (data === "DONE") {
                 end = new Date();
-                console.log(`Done receiving ${filename} in ${(end-start)/1000}seconds`)
+                console.log(`Done receiving ${filename} in ${(end-start)/1000} seconds`)
                 writer.close();
               } else if (typeof data === 'string') {
                 filename = data;

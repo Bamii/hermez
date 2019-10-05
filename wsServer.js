@@ -1,14 +1,16 @@
 const WebSocket = require('ws');
-const { cls } = require('./utils');
-
 class Connection {
   constructor(port) {
     this.port = port;
   }
   
   connect() {
-    this.wss = new WebSocket.Server({ port: this.port });
+    this.wss = new WebSocket.Server({ host: 'localhost', port: this.port });
     return this.wss;
+  }
+
+  start() {
+    return this.connect();
   }
 }
 
