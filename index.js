@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 const fs = require('fs');
 const ip = require('ip');
-
 const {
   cls,
   sendFile,
@@ -33,17 +32,19 @@ function main() {
         const WsServer = require('./wsServer');
 
         const port = getInputFromUser("Please enter the port you'll like to use: ");
-        const server = (new WsServer(port)).connect();
+        // now to find the ipaddress... hehe
+        console.log(port);
+        const server = (new WsServer('localhost', port)).connect();
         
         server
           .on('listening', (ws) => {
-            displayCreationStatus(true, port);
-            console.log();
-            console.log('listening for connections...');
-            console.log(server.address());
-            console.log(ip.address());
+            cls();
+            const address = `ip address => ${ip.address()}:${server.address().port}`;
+            displayCreationStatus(true, address);
+            console.log(address);
           })
           .on('error', (err) => {
+            cls()
             displayCreationStatus(false, err.code);
             serveMenu('1');
           })
@@ -55,7 +56,14 @@ function main() {
 
             files.forEach((file, index) => console.log(`[${index+1}] ${file.name} ${file.isDirectory() ? "(dir)" : ""}`));
 
-            sendFile(files, ws, main, server);
+            (function sendThisFilePlease(){
+              const filename = getInputFromUser('Enter an option\n(enter "m" to disconnect and go back to the menu):');
+              console.log(main);
+
+              sendFile({ files, ws, menu: main, server, filename }, () => {
+                sendThisFilePlease();
+              });
+            })()
           });
         break;
 
@@ -64,20 +72,15 @@ function main() {
 
         const address = getInputFromUser('Please enter the address of the computer you wish to connect to: ');
         const client = new WsClient(address);
-        // console.log(client.connect())
-        let filename = '';
-        let writer;
-        let start;
-        let end;
+        
+        let filename = '', writer, start, end;
 
-        let a = client
+        client
           .connect()
-
-        a
           .on('open', () => {
             cls();
             console.log("-----------------------------------------")
-            console.log("up, up, and away!!!")
+            console.log("* up, up, and away!!!")
             console.log("-----------------------------------------")
             // console.log("Here's a list of the files in this directory.")
             // fs
@@ -96,6 +99,7 @@ function main() {
               } else if (data === "DONE") {
                 end = new Date();
                 console.log(`Done receiving ${filename} in ${(end-start)/1000} seconds`)
+                console.log();
                 writer.close();
               } else if (typeof data === 'string') {
                 filename = data;
@@ -114,6 +118,7 @@ function main() {
       case "4":
         displayExitMessage();
         process.exit(0);
+        break;
     
       default:
     }

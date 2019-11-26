@@ -1,0 +1,15 @@
+# cli options (interactive)...
+
+- send a file. (create a connection).
+- receive a file. (join a connection).
+- send multiple files.
+
+## send a file.
+|NB: i could add UI functionality, if i'm adding this... this next line shouldn't be a problem|
+[...] first you have to make sure you're in the directory of the file you want to send. 
+
+... enter the name of the file you want to send [or pick from a list].
+... then press enter.
+
+
+pretty much the same for the rest of them

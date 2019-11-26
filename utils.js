@@ -23,14 +23,6 @@ function displayHelp(cb) {
   console.log('| 2. enter a port number and wait for connection                 |')
   console.log('| 3. run the program on computer B and select option 2           |')
   console.log('| 4. enter the address displayed on computer A                   |')
-  console.log('|                                                                |')
-  console.log('|    ** at this stage, Both computers should have a        **')
-  console.log('|    ** bi-directonal channel in that each computers       **')
-  console.log('|    ** can transfer data                                  **')
-  console.log('|    ** a list of the files available in that directory    **')
-  console.log("|    ** is displayed. i.e computer A's files are displayed **")
-  console.log("|    ** so that (s)he can choose which files to transfer   **")
-  console.log("|    ** to computer B                                      **")
   console.log('------------------------------------------------------------------');
   const a = getInputFromUser('Enter "m" to go back to menu.', "m");
 
@@ -67,12 +59,14 @@ function displayCreationStatus(status, extra) {
     console.log('| this program on another device, and selecting       |')
     console.log('| "Connect to network" in the menu options            |')
     console.log('| and the entering this ip address below when promted |')
-    console.log(`|    ip => localhost:${extra}                     |`)
+    console.log(`|    ip => ${extra} `)
     console.log('-------------------------------------------------------');
     console.log('| when the other system connects, a list of files (in |');
     console.log('| the current directory) is displayed so the user can |');
     console.log('| pick which he wants to transfer                     |');
     console.log('-------------------------------------------------------');
+    console.log();
+    console.log('listening for connections...');
   } else {
     console.log('-------------------------------------------------------');
     console.log('| Connection could not be created.                    |')
@@ -86,10 +80,7 @@ function cls() {
   console.log("\u001b[2J");
 }
 
-function sendFile(files, ws, menu, server) {
-  console.log();
-  const filename = getInputFromUser('Enter an option\n(enter "m" to disconnect and go back to the menu):');
-
+function sendFile({ files, ws, menu, server, filename }, cb) {
   if (filename === "m") {
     server.close(() => {
       menu();
@@ -111,8 +102,9 @@ function sendFile(files, ws, menu, server) {
       })
       .on('close', () => {
         console.log(`Done sending ${fl}!`)
+        console.log();
         ws.send('DONE');
-        sendFile(files, ws, menu, server);
+        cb();
       });
   }
 }
