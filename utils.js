@@ -2,15 +2,16 @@ const rlsync = require('readline-sync');
 const fs = require('fs');
 
 function displayMenu(items) {
-  console.log("\u001b[2J")
-  console.log("--------------------------------------------");
-  console.log("||                  HERMEZ                ||");
-  console.log("--------------------------------------------");
-  console.log("||  send files pc to pc. pretty fast too  ||");
-  console.log("--------------------------------------------");
-  Object.values(items).map((d, index) => console.log(`[${index+1}]. ${d}`));
-  console.log();
-  return;
+  // art.font('sendit', 'Doom', text => {
+    console.log("\u001b[2J")
+    console.log("--------------------------------------------");
+    console.log("||                  HERMEZ                ||");
+    console.log("--------------------------------------------");
+    console.log("||  send files pc to pc. pretty fast too  ||");
+    console.log("--------------------------------------------");
+    Object.values(items).map((d, index) => console.log(`[${index+1}]. ${d}`));
+    console.log();
+  // });
 }
 
 function displayHelp(cb) {
@@ -28,11 +29,10 @@ function displayHelp(cb) {
   if (a === "m") {
     cb();
   }
-  return;
 }
 
 function displayList() {
-  return;
+
 }
 
 function getInputFromUser(question, limit = []) {
@@ -48,7 +48,6 @@ function displayExitMessage(){
   console.log("-----------------------------------------------------------------")
   console.log("|  Thank you for using hermes! Please share with your friends.  |");
   console.log("-----------------------------------------------------------------")
-  return;
 }
 
 function displayCreationStatus(status, extra) {
@@ -75,7 +74,6 @@ function displayCreationStatus(status, extra) {
     console.log(`| sorry, an error occured: ${extra}`);
     console.log('-------------------------------------------------------');
   }
-  return;
 }
 
 function cls() {
