@@ -33,7 +33,6 @@ function main() {
 
         const port = getInputFromUser("Please enter the port you'll like to use: ");
         // now to find the ipaddress... hehe
-        console.log(port);
         const server = (new WsServer('localhost', port)).connect();
         
         server
