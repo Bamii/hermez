@@ -52,8 +52,8 @@ function main() {
             cls();
             console.log('Found one connection!');
             console.log("Here's a list of the files in this directory.")
+            console.log();
             const files = fs.readdirSync('.', { withFileTypes: true });
-
             files.forEach((file, index) => console.log(`[${index+1}] ${file.name} ${file.isDirectory() ? "(dir)" : ""}`));
 
             (function sendThisFilePlease(){
@@ -61,12 +61,10 @@ function main() {
 
               if (filename === "m") {
                 server.close(() => {
-                  menu();
+                  main();
                 });
               } else {
-                sendFile({ files, ws, menu: main, server, filename }, () => {
-                  sendThisFilePlease();
-                });
+                sendFile({ files, ws, filename }, () =>  sendThisFilePlease());
               }
             })()
           });
