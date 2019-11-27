@@ -58,11 +58,16 @@ function main() {
 
             (function sendThisFilePlease(){
               const filename = getInputFromUser('Enter an option\n(enter "m" to disconnect and go back to the menu):');
-              console.log(main);
 
-              sendFile({ files, ws, menu: main, server, filename }, () => {
-                sendThisFilePlease();
-              });
+              if (filename === "m") {
+                server.close(() => {
+                  menu();
+                });
+              } else {
+                sendFile({ files, ws, menu: main, server, filename }, () => {
+                  sendThisFilePlease();
+                });
+              }
             })()
           });
         break;
