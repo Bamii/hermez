@@ -89,7 +89,6 @@ function displayCreationStatus(status, extra) {
     console.log("| pick which he wants to transfer                     |");
     console.log("-------------------------------------------------------");
     console.log();
-    console.log("listening for connections...");
   } else {
     console.log("-------------------------------------------------------");
     console.log("| Connection could not be created.                    |");
