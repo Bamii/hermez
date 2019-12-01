@@ -29,7 +29,7 @@ function main() {
   function serveMenu(topMenuOption) {
     switch(topMenuOption) {
       case "1":
-        const WsServer = require('./wsServer');
+        const WsServer = require('./ws/wsServer');
 
         const port = getInputFromUser("Please enter the port you'll like to use: ");
         // now to find the ipaddress... hehe
@@ -71,7 +71,7 @@ function main() {
         break;
 
       case "2":
-        const WsClient = require('./wsClient');
+        const WsClient = require('./ws/wsClient');
 
         const address = getInputFromUser('Please enter the address of the computer you wish to connect to: ');
         const client = new WsClient(address);
