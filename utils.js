@@ -2,7 +2,7 @@ const rlsync = require("readline-sync");
 const fs = require("fs");
 
 function displayMenu(items) {
-  console.log("\u001b[2J");
+  // console.log("\u001b[2J");
   console.log("--------------------------------------------");
   console.log("||                 HERMEZ                 ||");
   console.log("--------------------------------------------");
@@ -100,12 +100,12 @@ function displayCreationStatus(status, extra) {
 }
 
 function cls() {
-  console.log("\u001b[2J");
+  // console.log("\u001b[2J");
 }
 
 function sendFile({ files, ws, filename }, cb) {
   // sends the filename to the client;
-  const fl = files.map(file => file.name)[filename - 1];
+  const fl = files.map(file => file.name)[filename];
   ws.send(fl);
 
   // create a readStream using the filename

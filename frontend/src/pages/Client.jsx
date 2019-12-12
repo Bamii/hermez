@@ -1,23 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import FileList from './FileList.jsx';
-import Header from './header.jsx';
-import SectionTitle from './SectionTitle.jsx';
-import DirectoryList from './DirectoryList.jsx';
-import WidgetCard from './WidgetCard.jsx';
-// const fs = require('fs-extra/lib/fs')
+import FileList from '../containers/FileList.jsx';
+import Header from '../containers/Header.jsx';
+import SectionTitle from '../containers/SectionTitle.jsx';
+import DirectoryList from '../containers/DirectoryList.jsx';
+import WidgetCard from '../containers/WidgetCard.jsx';
 
 const Client = () => {
-  let list = {
-    "Music": ["me.mp3", "you and i.mp3", "ouuuuuuu.mp3"],
-    "Movies": ["avengers.mp4", "BLACK MIRROR", {
-      'mcu': ["avengers.mp4"]
-    }],
-    "Docs": ["ds.pdf", 'dfsf.book', 'tsdfs.pdf'],
-    "MusThinfsic": ['dfads.js', 'sdfsf.jsx',],
-    "Musishic": [],
-  };
   const [selectedDir, selectDir] = useState(0);
   const [selectedFiles, selectFile] = useState([]);
+  const [fileList, setFileList] = useState({});
 
   const selectFiles = (file) => {
     const a = selectedFiles.findIndex(el => el === file);
@@ -28,8 +19,8 @@ const Client = () => {
   }
 
   useEffect(() => {
-    // const files = fs.readdirSync('.', { withFileTypes: true });
-    list = {
+
+    setFileList({
       "Music": ["me.mp3", "you and i.mp3", "ouuuuuuu.mp3"],
       "Movies": ["avengers.mp4", "BLACK MIRROR", {
         'mcu': ["avengers.mp4"]
@@ -37,21 +28,17 @@ const Client = () => {
       "Docs": ["ds.pdf", 'dfsf.book', 'tsdfs.pdf'],
       "MusThinfsic": ['dfads.js', 'sdfsf.jsx',],
       "Musishic": [],
-    }
-  })
+    })
+  }, [true])
 
   return (
-    /* still deciding wether to slap 'container' on there or not */
-    /* and the borders too... ugh! */
     <div className="mx-auto text-primaryDark">
-      <Header />
-
       <div className="flex">
         {/* left */}
         <div className="relative p-10 pr-0 w-1/2 max-w-20">
           <SectionTitle title="files" />
           <DirectoryList
-            list={list}
+            list={fileList}
             selectedItem={selectedDir}
             onDirSelect={(e, index) => {
               selectDir(index);
@@ -68,7 +55,7 @@ const Client = () => {
           <SectionTitle title="music" />
           {/* <FileList extras="mb-10" /> */}
           <FileList
-            list={Object.values(list)[selectedDir]}
+            list={Object.values(fileList)[selectedDir]}
             extras="mb-10"
             selectedItems={selectedFiles}
             onFileSelect={(e, index) => {

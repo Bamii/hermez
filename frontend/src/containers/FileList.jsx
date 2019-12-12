@@ -1,15 +1,7 @@
 import React from 'react';
 import File from '../../public/assets/file2x.png'
 import SingleFile from './SingleFile.jsx';
-
-const getType = o =>
-  Object.prototype.toString
-    .call(o)
-    .split(' ')[1]
-    .slice(0, -1)
-    .toLowerCase();
-
-const is = (type, value) => getType(value).toLowerCase() === type.toLowerCase();
+import { is } from '../utils/toolbox';
 
 const FileList = ({ extras, list = [], selectedItems=[], onFileSelect }) => {
   return (
