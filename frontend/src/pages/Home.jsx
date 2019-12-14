@@ -3,13 +3,46 @@ import { Link } from 'react-router-dom';
 import Icon from '../../public/assets/info-icon.png'
 import Cog from '../../public/assets/cog.png'
 
+const state = {
+}
+
 const Home = () => {
   const [selectedMode, setMode] = useState(0);
-  const [port, setPort] = useState(0);
+  const [port, setPort] = useState("");
+  const [nick, setNick] = useState("");
 
   useState(() => {
     setMode(0);
   }, [true]);
+
+  const seeProcess = () => {
+    const client = new WebSocket('ws://0.0.0.0:3001');
+
+    client.onopen = () => {
+      console.log('open');
+      setTimeout(() => {
+        client.close();
+      }, 5000);
+    }
+    client.onmessage = (data) => {
+      console.log(data.data);
+    }
+    client.onclose = () => {
+      console.log('closed');
+      client.send('conn has closed');
+    }
+    client.onerror = () => {
+      console.log('error');
+    }
+  }
+
+  const seeProcess2 = () => {
+    fetch('/ws', { method: 'GET' })
+      .then((data) => data.json())
+      .then(({ data })=> {
+        console.log(data.stdout);
+      });
+  }
 
   return (
     <div className="container mx-auto text-primary">
@@ -32,21 +65,50 @@ const Home = () => {
           </div>
         </div>
 
-        <div className="py-10 pb-3 w-auto">
-          <input
-            type="number"
-            value={port}
-            maxLength={5}
-            onChange={(e) => setPort(e.target.value)}
-            className="py-3 px-10 border border-secondary rounded-lg"
-            placeholder="enter a port number."
-          />
-        </div>
-        <div className="py-3 pb-24 w-auto">
-          <button className="py-3 px-8 bg-white border border-secondary rounded-lg">
-            *flap flap*
-          </button>
-        </div>
+        {selectedMode === 0 &&
+          <React.Fragment>
+            <div className="py-10 pb-3 w-auto">
+              <input
+                type="text"
+                value={port}
+                onChange={(e) => setPort(e.target.value)}
+                className="py-3 px-10 border border-secondary rounded-lg"
+                placeholder="enter a port number."
+              />
+            </div>
+            <div className="py-3 pb-24 w-auto">
+              <button onClick={seeProcess2} className="py-3 px-8 bg-white border border-secondary rounded-lg">
+                *flap flap*
+              </button>
+            </div>
+          </React.Fragment> }
+
+        {selectedMode === 1 &&
+          <React.Fragment>
+            <div className="py-10 pb-3 w-auto">
+              <input
+                type="text"
+                value={port}
+                onChange={(e) => setPort(e.target.value)}
+                className="py-3 px-10 border border-secondary rounded-lg"
+                placeholder="enter the port no."
+              />
+            </div>
+            <div className="py-3 pb-5 w-auto">
+              <input
+                type="text"
+                value={nick}
+                onChange={(e) => setNick(e.target.value)}
+                className="py-3 px-10 border border-secondary rounded-lg"
+                placeholder="enter a nickname."
+              />
+            </div>
+            <div className="py-3 pb-24 w-auto">
+              <button onClick={seeProcess} className="py-3 px-8 bg-white border border-secondary rounded-lg">
+                *flippity flappitty*
+              </button>
+            </div>
+          </React.Fragment> }
 
         {/* Header... */}
         <div className="header h-60 w-full flex justify-between items-center p-10">

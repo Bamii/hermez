@@ -12,6 +12,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "body-parser": "^1.19.0",
     "css-loader": "^1.0.1",
     "express": "^4.16.4",
     "fs": "0.0.1-security",
@@ -44,5 +45,6 @@
     "webpack": "^4.25.1",
     "webpack-cli": "^3.1.2",
     "webpack-dev-server": "^3.1.10"
-  }
+  },
+  "proxy": "http://localhost:4000"
 }

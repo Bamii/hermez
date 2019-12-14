@@ -34,7 +34,7 @@ function main() {
         const port = getInputFromUser("Please enter the port you'll like to use: ");
         // now to find the ipaddress... hehe
         console.log(port);
-        const server = (new WsServer('localhost', port)).connect();
+        const server = (new WsServer('0.0.0.0', port)).connect();
         
         server
           .on('listening', (ws) => {
@@ -60,13 +60,11 @@ function main() {
               const filename = getInputFromUser('Enter an option\n(enter "m" to disconnect and go back to the menu):');
 
               if (filename === "m") {
-                server.close(() => {
-                  main();
-                });
+                server.close(() => main());
               } else {
                 sendFile({ files, ws, filename: filename - 1 }, () =>  sendThisFilePlease());
               }
-            })()
+            })();
           });
         break;
 

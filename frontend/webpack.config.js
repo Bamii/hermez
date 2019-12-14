@@ -1,12 +1,13 @@
 var path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const serverHandler = require('./serverHandler');
 
 module.exports = {
   mode: "development",
   entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js'
+    filename: 'bundle.js',
   },
   module: {
     rules: [
@@ -29,10 +30,16 @@ module.exports = {
     new HtmlWebpackPlugin({ template: './index.html' })
   ],
   devServer: {
+    historyApiFallback: true,
     contentBase: "./dist",
-    host: '0.0.0.0'
+    host: '0.0.0.0',
+    before: serverHandler,
+    headers: {
+      "X-Content-Type-Options": "nosniff"
+    }
   },
   node: {
     fs: 'empty',
-  }
+  },
 }
+  

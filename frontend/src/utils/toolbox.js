@@ -21,8 +21,16 @@ const flatten = (obj, type = '') => {
   return top;
 }
 
-module.exports = {
-  getType,
-  is,
-  flatten
+const responseBuilder = (message, extra) => {
+  return {
+    message,
+    extra
+  }
 }
+
+module.exports = {
+  is,
+  getType,
+  flatten,
+  responseBuilder,
+};
