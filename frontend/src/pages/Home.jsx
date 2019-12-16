@@ -10,10 +10,7 @@ const Home = () => {
   const [port, setPort] = useState("");
   const [nick, setNick] = useState("");
   const [done, setDone] = useState(0);
-
-  // useEffect(() => {
-  //   setMode(0);
-  // }, [true]);
+  const [ipAdd, setIp] = useState("");
 
   const validate = (input, limit, operator) => {
     switch(operator) {
@@ -34,8 +31,9 @@ const Home = () => {
   const openServer = () => {
     if (validate(port, 4, 'equal')) {
       axios.post('/ws', { port: Number.parseInt(port) })
-        .then((data) => {
-          console.log('something')
+        .then(data => {
+          const ip = data.data.extra;
+          setIp(ip);
           setDone(1);
           // return data.data;
         })
@@ -49,19 +47,23 @@ const Home = () => {
   }
 
   const connectClient = () => {
-    if (validate(nick, 5, 'more')) {
+    if (validate(nick, 5, 'more') && validate(port, 4, 'equal')) {
       axios.get('/ws', { nickname: nick })
         .then((data) => {
           console.log(data.data);
-          setDone(true);
+          setDone(1);
           return data.data;
         })
-        .then(() => {})
+        .catch(() => {})
     } else {
       // do something about the error
       // use a toast maybe??
       console.log('enter 5 or more characters!')
     }
+  }
+
+  const lif = () => {
+    console.log(ipAdd);
   }
 
   return (
@@ -70,10 +72,8 @@ const Home = () => {
         <Redirect
           push
           to={{
-            pathname: "/client",
-            state: {
-              mode: selectedMode === 0 ? 'server' : 'client'
-            }
+            pathname: selectedMode === 0 ? "/host" : "/client",
+            state: { ip: ipAdd, nickname: nick }
           }}
         />
       :
@@ -82,7 +82,10 @@ const Home = () => {
 
             <div className="py-2 px-2 bg-secondary w-auto flex rounded-lg">
               <div
-                onClick={(e) => setMode(Number.parseInt(e.target.dataset.position))}
+                onClick={(e) => {
+                  console.log(ip);
+                  setMode(Number.parseInt(e.target.dataset.position))}
+                }
                 data-position={0}
                 className={`cursor-pointer py-2 px-6 w-auto rounded-lg ${selectedMode === 0 ? "bg-primary text-white" : "bg-none"}`}
               >

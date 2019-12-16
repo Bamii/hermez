@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build:style": "tailwind build public/styles/style.css -o public/styles/tailwind.css",
+    "tailwind": "tailwind build public/styles/style.css -o public/styles/tailwind.css",
     "build:dev": "webpack --config webpack.config.js --mode=development",
     "build:prod": "webpack --config webpack.config.js --mode=production",
-    "start": "set NODE_ENV=development && webpack-dev-server --history-api-fallback --open",
+    "start": "set NODE_ENV=development && webpack-dev-server",
     "test": ""
   },
   "author": "",
@@ -46,6 +46,5 @@
     "webpack": "^4.25.1",
     "webpack-cli": "^3.1.2",
     "webpack-dev-server": "^3.1.10"
-  },
-  "proxy": "http://localhost:4000"
+  }
 }

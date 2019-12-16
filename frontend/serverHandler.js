@@ -1,11 +1,12 @@
 const fs = require('fs');
+const ip = require('ip');
 const bp = require('body-parser');
 const WsServer = require('../ws/wsServer.js');
 const WsClient = require('../ws/wsClient');
 const { responseBuilder, is } = require('./src/utils/toolbox');
 
 let server = null;
-const connections = {};
+let connections = {};
 let filename = '', writer, start, end;
 
 function serverHandler(app, s, c) {
@@ -15,6 +16,11 @@ function serverHandler(app, s, c) {
   // ::self
   app.post('/ws', function(req, res) {
     const { port } = req.body;
+
+    console.log(ip.address());
+    const files = fs.readdirSync('./', { withFileTypes: true });
+    const files2 = files.sort(((a,b) => a.isDirectory() ? -1 : 1));
+    const inner = fs.readdirSync(`./${files2[0].name}`, { withFileTypes: true });
 
     if (!app.get('hermez-server') && server == null) {
       server =  (new WsServer('0.0.0.0', 3001)).connect();
@@ -40,23 +46,32 @@ function serverHandler(app, s, c) {
         console.log(`on server: ${data}`);
       })
       
-      res.status(201).send(responseBuilder("Server Created"));
+      res.status(201).send(responseBuilder("Server Created", { ip: ip.address() }));
       return;
     }
-
+  
+    // console.log(files2);
+    // console.log(inner);
     res.status(200).send(
-      responseBuilder("Still here", {"hermez-connections": Object.keys(connections).length })
+      responseBuilder(
+        "Still here",
+        {
+          "connections-ln": Object.keys(connections).length,
+          "connections": Object.keys(connections)
+        }
+      )
     );
     return;
   })
 
-  // creating client.
+  // creating and connecting client to server.
   // ::self
   app.get('/ws', function(req, res) {
     const { nickname } = req.body;
 
     // take note of the ip address.
-    const client = new WsClient('172.20.10.6:3001').connect();
+    // const client = new WsClient('172.20.10.6:3001').connect();
+    const client = new WsClient('0.0.0.0:3001').connect();
 
     client
       .on('open', () => {
@@ -85,7 +100,7 @@ function serverHandler(app, s, c) {
   })
 
   // the sending facility.
-  // ::cross
+  // ::self
   app.post('/ws-send', function(req, res) {
     const { filenames } = req.body;
 
@@ -127,6 +142,7 @@ function serverHandler(app, s, c) {
     res.status(200).send({ message: res.get('hermez-nickname') })
   })
 
+  // disconnecting clients...
   // deleting the clients... i.e updating the server table.
   // ::cross
   app.patch('/ws', function(req, res) {
@@ -160,3 +176,27 @@ function serverHandler(app, s, c) {
 }
 
 module.exports = serverHandler;
+
+/* 
+
+[
+  Dirent { name: '.babelrc', [Symbol(type)]: 1 },
+  Dirent { name: '.gitignore', [Symbol(type)]: 1 },
+  Dirent { name: '.npmignore', [Symbol(type)]: 1 },
+  Dirent { name: 'Dockerfile', [Symbol(type)]: 1 },
+  Dirent { name: 'LICENSE.MD', [Symbol(type)]: 1 },
+  Dirent { name: 'README.md', [Symbol(type)]: 1 },
+  Dirent { name: 'dist', [Symbol(type)]: 2 },
+  Dirent { name: 'index.html', [Symbol(type)]: 1 },
+  Dirent { name: 'node_modules', [Symbol(type)]: 2 },
+  Dirent { name: 'package-lock.json', [Symbol(type)]: 1 },
+  Dirent { name: 'package.json', [Symbol(type)]: 1 },
+  Dirent { name: 'public', [Symbol(type)]: 2 },
+  Dirent { name: 'serverHandler.js', [Symbol(type)]: 1 },
+  Dirent { name: 'src', [Symbol(type)]: 2 },
+  Dirent { name: 'tailwind.config.js', [Symbol(type)]: 1 },
+  Dirent { name: 'tests', [Symbol(type)]: 2 },
+  Dirent { name: 'webpack.config.js', [Symbol(type)]: 1 }
+]
+
+*/

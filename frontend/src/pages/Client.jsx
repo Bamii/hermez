@@ -1,25 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { withRouter } from 'react-router-dom';
 import { Redirect } from 'react-router-dom';
+import axios from 'axios';
 import { is } from '../utils/toolbox';
-import FileList from '../containers/FileList.jsx';
+import ClientHistoryEntry from '../containers/ClientHistoryEntry.jsx';
 import SectionTitle from '../containers/SectionTitle.jsx';
-import DirectoryList from '../containers/DirectoryList.jsx';
 import WidgetCard from '../containers/WidgetCard.jsx';
+import Button from '../containers/Button.jsx';
 
 const Client = (props) => {
-  const [selectedDir, selectDir] = useState(0);
-  const [selectedFiles, selectFile] = useState([]);
-  const [fileList, setFileList] = useState({});
   const [validEntry, setVE] = useState(1);
-
-  const selectFiles = (file) => {
-    const a = selectedFiles.findIndex(el => el === file);
-
-    a > -1
-      ? selectFile([...selectedFiles.slice(0,a), ...selectedFiles.slice(a+1)])
-      : selectFile([...selectedFiles, file]);
-  }
 
   useEffect(() => {
     // redirect them if theu didn't enter through the dashboard.
@@ -27,78 +17,62 @@ const Client = (props) => {
     // mode property in the state.
     const location = props.location;
     console.log(props.location);
-    if (!location.hasOwnProperty('state') || !location.state || !location.state.mode) {
-      setVE(0);
+    if (!location.hasOwnProperty('state') || !location.state || !location.state.nickname) {
+      // setVE(0);
     }
   }, [true]);
 
-  useEffect(() => {
-    setFileList({
-      "Music": ["me.mp3", "you and i.mp3", "ouuuuuuu.mp3"],
-      "Movies": ["avengers.mp4", "BLACK MIRROR", {
-        'mcu': ["avengers.mp4"]
-      }],
-      "Docs": ["ds.pdf", 'dfsf.book', 'tsdfs.pdf'],
-      "MusThinfsic": ['dfads.js', 'sdfsf.jsx',],
-      "Musishic": [],
-    })
-  }, [true])
+  const disconnect = () => {
+    axios.patch('/ws', { host: '' })
+      .then(() => {
+        // display a toast for the users for some seconds && redirect to the main page.
+        // logic for redirecting the page... the page redirects if the 'validEntry' === 1.
+        setVE(0);
+      })
+      .catch(() => {
+        // display a toast for the users.
+      })
+  }
+
+  const redir = () => {
+    console.log('sdfaf')
+  }
 
   return (
     validEntry === 1
       ?
         <div className="mx-auto text-primaryDark">
-          <div className="flex">
+          <div style={{ height: 'calc(100vh - 8.5rem)' }} className="flex">
             {/* left */}
-            <div className="relative p-10 pr-0 w-1/2 max-w-20">
-              <SectionTitle title="files" />
-              <DirectoryList
-                list={fileList}
-                selectedItem={selectedDir}
-                onDirSelect={(e, index) => {
-                  selectDir(index);
-                  selectFile([]);
-                }}
-              />
-              <div className="absolute bottom-2 left-0 right-0 text-center">
-                hermez v1.0
+            <div className="overflow-scroll relative p-10 pl-20 w-full">
+              <SectionTitle title="history" />
+              <div className="py-12">
+                <ClientHistoryEntry text="received 'fssd.mkv' from the server" />
+                <ClientHistoryEntry text="received appointment.mkv" />
               </div>
-            </div>
-
-            {/* middle */}
-            <div className="relative w-full p-10 flex-grow border border-t-0 border-secondary">
-              <SectionTitle title="music" />
-              {/* <FileList extras="mb-10" /> */}
-              <FileList
-                list={Object.values(fileList)[selectedDir]}
-                extras="mb-10"
-                selectedItems={selectedFiles}
-                onFileSelect={(e, index) => {
-                  selectFiles(index)
-                }}
-              />
             </div>
 
             {/* right */}
-            <div className="p-10">
-              {/* send file widget */}
-              <div
-                style={{ width: '250px', height: '250px' }}
-                className="border-2 border-dashed border-secondary rounded-lg m-auto text-center flex justify-center items-center"
-              >
-                drag and drop a file <br/> to send
-              </div>
+            <div
+              style={{ height: 'calc(100vh - 8.5rem)' }}
+              className="flex flex-col justify-end relative w-1/3
+              border-l border-secondary max-w-20"
+            >
+              <div className="p-10">
+                <div className="flex flex-col py-10">
+                  <hr className="w-1/3 mx-auto"/>
+                  <div className="text-lg text-center py-8">address: http://localhost:3000</div>
+                  <hr className="w-1/3 mx-auto"/>
+                </div>
 
-              {/* other widgets */}
-              <div className="flex flex-col py-10">
-                <hr className="w-1/3 mx-auto"/>
-                <div className="text-lg text-center py-8">address: http://localhost:3000</div>
-                <hr className="w-1/3 mx-auto"/>
+                <Button
+                  extras="mb-5 py-5 px-8 text-lg"
+                  btnClick={redir}
+                >
+                  disconnect!
+                </Button>
+                <WidgetCard title="active connections" />
               </div>
-
-              <WidgetCard extras="mt-0" title="selected files" />
-              <WidgetCard title="activities" />
-              <WidgetCard title="active connections" />
             </div>
           </div>
         </div>

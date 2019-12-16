@@ -6,6 +6,7 @@ module.exports = {
       body: ['Baskerville Old Face', 'sans-serif'],
     },
     minWidth: {
+      '20': '20%',
       '100': '100px',
     },
     maxWidth: {

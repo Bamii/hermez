@@ -10,7 +10,7 @@ const Header = () => {
       <div className="text-4xl text-primary">hermez</div>
       <div className="flex">
         <div className="h-8 w-8 mr-10"><img src={Cog} alt="cog icon." alt=""/></div>
-        <div className="h-8 w-8"><img src={Power} alt=""/></div>
+        {/* <div className="h-8 w-8"><img src={Power} alt=""/></div> */}
       </div>
     </div>
   )
