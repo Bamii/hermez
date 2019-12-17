@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { connect } from "react-redux";
 import { withRouter } from 'react-router-dom';
 import { Link, Redirect } from 'react-router-dom';
-import axios from 'axios';
+import { setDownloadFolder } from "../actions";
 import Icon from '../../public/assets/info-icon.png'
 import Cog from '../../public/assets/cog.png'
 
-const Home = () => {
+const Home = (props) => {
   const [selectedMode, setMode] = useState(0);
   const [port, setPort] = useState("");
   const [nick, setNick] = useState("");
@@ -62,10 +64,6 @@ const Home = () => {
     }
   }
 
-  const lif = () => {
-    console.log(ipAdd);
-  }
-
   return (
     done === 1
       ? 
@@ -80,70 +78,54 @@ const Home = () => {
         <div className="container mx-auto text-primary">
           <div className="w-full h-screen m-auto flex flex-col items-center justify-end text-center">
 
-            <div className="py-2 px-2 bg-secondary w-auto flex rounded-lg">
+            <div className="py-2 px-2 bg-secondaryLight w-auto flex rounded-lg">
               <div
-                onClick={(e) => {
-                  console.log(ip);
-                  setMode(Number.parseInt(e.target.dataset.position))}
-                }
+                onClick={(e) => setMode(Number.parseInt(e.target.dataset.position))}
                 data-position={0}
-                className={`cursor-pointer py-2 px-6 w-auto rounded-lg ${selectedMode === 0 ? "bg-primary text-white" : "bg-none"}`}
+                className={`cursor-pointer  py-2 px-6 w-auto rounded-lg
+                  ${selectedMode === 0 ? "bg-primaryLight text-white" : "bg-none text-primaryDark"}`}
               >
                 create <br/> connection
               </div>
               <div
                 onClick={(e) => setMode(Number.parseInt(e.target.dataset.position))}
                 data-position={1}
-                className={`cursor-pointer py-2 px-6 w-auto rounded-lg ${selectedMode === 1 ? "bg-primary text-white" : "bg-none"}`}
+                className={`cursor-pointer py-2 px-6 w-auto rounded-lg
+                  ${selectedMode === 1 ? "bg-primaryLight text-white" : "bg-none text-primaryDark"}`}
               >
                 connect to <br/> server
               </div>
             </div>
 
-            {selectedMode === 0 &&
-              <React.Fragment>
-                <div className="py-10 pb-3 w-auto">
-                  <input
-                    type="text"
-                    value={port}
-                    onChange={(e) => setPort(e.target.value)}
-                    className="py-3 px-10 border border-secondary rounded-lg"
-                    placeholder="enter a port number."
-                  />
-                </div>
-                <div className="py-3 pb-24 w-auto">
-                  <button onClick={openServer} className="py-3 px-8 bg-white border border-secondary rounded-lg">
-                    *flap flap*
-                  </button>
-                </div>
-              </React.Fragment> }
-
-            {selectedMode === 1 &&
-              <React.Fragment>
-                <div className="py-10 pb-3 w-auto">
-                  <input
-                    type="text"
-                    value={port}
-                    onChange={(e) => setPort(e.target.value)}
-                    className="py-3 px-10 border border-secondary rounded-lg"
-                    placeholder="enter the port no."
-                  />
-                </div>
-                <div className="py-3 pb-5 w-auto">
-                  <input
-                    type="text"
-                    value={nick}
-                    onChange={(e) => setNick(e.target.value)}
-                    className="py-3 px-10 border border-secondary rounded-lg"
-                    placeholder="enter a nickname."
-                  />
-                </div>
-                <div className="py-3 pb-24 w-auto">
-                  <button onClick={connectClient} className="py-3 px-8 bg-white border border-secondary rounded-lg">
-                    *flippity flappitty*
-                  </button>
-                </div>
-              </React.Fragment> }
+            <React.Fragment>
+              <div className="py-10 pb-3 w-auto">
+                <input
+                  type="text"
+                  value={port}
+                  onChange={(e) => setPort(e.target.value)}
+                  className="py-3 px-10 rounded-lg text-primary bg-secondaryLighter"
+                  placeholder="enter the port no."
+                />
+              </div>
+              <div className="py-3 pb-5 w-auto">
+                <input
+                  type="text"
+                  value={nick}
+                  onChange={(e) => setNick(e.target.value)}
+                  className="py-3 px-10 rounded-lg text-primary bg-secondaryLighter"
+                  placeholder="enter a nickname."
+                />
+              </div>
+              <div className="py-3 pb-24 w-auto">
+                <button
+                  style={{ transition: 'all .3s ease-in ' }}
+                  onClick={() => selectedMode === 0 ? openServer : connectClient}
+                  className="py-3 px-8 bg-white border border-secondary rounded-lg"
+                >
+                  {selectedMode === 0 ? "*flap flap*" : "*flippity flappitty*"}
+                </button>
+              </div>
+            </React.Fragment>
 
             {/* Header... */}
             <div className="header h-60 w-full flex justify-between items-center p-10">
@@ -164,4 +146,13 @@ const Home = () => {
   );
 }
 
-export default withRouter(Home);
+const mapStateToProps = ({ downloadFolder }) => {
+  return { store: downloadFolder };
+}
+
+const mapDispatchToProps = { setDownloadFolder }
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withRouter(Home));

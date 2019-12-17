@@ -67,8 +67,9 @@ function serverHandler(app, s, c) {
   // creating and connecting client to server.
   // ::self
   app.get('/ws', function(req, res) {
-    const { nickname } = req.body;
+    const { nickname, downloadFolder } = req.body;
 
+    
     // take note of the ip address.
     // const client = new WsClient('172.20.10.6:3001').connect();
     const client = new WsClient('0.0.0.0:3001').connect();

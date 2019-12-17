@@ -10,6 +10,7 @@ import Button from '../containers/Button.jsx';
 
 const Client = (props) => {
   const [validEntry, setVE] = useState(1);
+  const [nickname, setNickname] = useState("");
 
   useEffect(() => {
     // redirect them if theu didn't enter through the dashboard.
@@ -19,6 +20,8 @@ const Client = (props) => {
     console.log(props.location);
     if (!location.hasOwnProperty('state') || !location.state || !location.state.nickname) {
       // setVE(0);
+    } else {
+      setNickname(location.state.nickname);
     }
   }, [true]);
 
@@ -45,7 +48,7 @@ const Client = (props) => {
           <div style={{ height: 'calc(100vh - 8.5rem)' }} className="flex">
             {/* left */}
             <div className="overflow-scroll relative p-10 pl-20 w-full">
-              <SectionTitle title="history" />
+              <SectionTitle title={`hi ${nickname}, here's your history...`} />
               <div className="py-12">
                 <ClientHistoryEntry text="received 'fssd.mkv' from the server" />
                 <ClientHistoryEntry text="received appointment.mkv" />
@@ -65,13 +68,13 @@ const Client = (props) => {
                   <hr className="w-1/3 mx-auto"/>
                 </div>
 
+                <WidgetCard title="connected to" />
                 <Button
                   extras="mb-5 py-5 px-8 text-lg"
                   btnClick={redir}
                 >
                   disconnect!
                 </Button>
-                <WidgetCard title="active connections" />
               </div>
             </div>
           </div>
