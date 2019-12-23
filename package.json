@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "ascii-art": "^1.5.1",
+    "findit": "^2.0.0",
     "ip": "^1.1.5",
     "readline-sync": "^1.4.10",
     "ws": "^7.1.2"

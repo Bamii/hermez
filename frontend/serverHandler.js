@@ -4,10 +4,12 @@ const bp = require('body-parser');
 const WsServer = require('../ws/wsServer.js');
 const WsClient = require('../ws/wsClient');
 const { responseBuilder, is } = require('./src/utils/toolbox');
+const { Transform } = require('stream');
 
 let server = null;
 let connections = {};
-let filename = '', writer, start, end;
+let serverName;
+let start, end;
 
 function serverHandler(app, s, c) {
   app.use(bp.json({ type: 'application/json' }));
@@ -15,43 +17,77 @@ function serverHandler(app, s, c) {
   // creating the server
   // ::self
   app.post('/ws', function(req, res) {
-    const { port } = req.body;
+    const { port, nickname } = req.body;
+    let streams = {};
+    serverName = nickname;
 
-    console.log(ip.address());
-    const files = fs.readdirSync('./', { withFileTypes: true });
-    const files2 = files.sort(((a,b) => a.isDirectory() ? -1 : 1));
-    const inner = fs.readdirSync(`./${files2[0].name}`, { withFileTypes: true });
-
-    if (!app.get('hermez-server') && server == null) {
-      server =  (new WsServer('0.0.0.0', 3001)).connect();
-      app.set('hermez-server', server);
-
+    if (server == null) {
+      server =  (new WsServer('0.0.0.0', port)).connect();
+      
       server.on('connection', (ws) => {
         ws.on('message', (m) => {
-          const [type, message] = m.split(" ");
-          switch(type) {
-            case 'nickname':
-              connections[message] = ws;
-              return;
+          if (is('string', m) && m.split(" ")[0] === 'nickname') {
+            const [type, message] = m.split(" ");
+            switch(type) {
+              case 'nickname':
+                connections[message] = ws;
+                return;
 
-            default:
-              break
+              default:
+                break
+            }
+          } else if (is('string', m) && m === 'START') {
+
+          } else if (is('string', m) && m.split(" ")[0] === "DONE") {
+            const [, nickname, ...fname] = m.split(" ");
+            console.log(`Done receiving ${fname.join(" ")}`)
+            console.log();
+
+            if (server !== nickname) {
+              streams[fname.join(" ")].close();
+              delete streams[fname.join(" ")];
+            }
+
+            for (let nick in connections) {
+              const sock = connections[nick];
+              if (nick === nickname) {
+                continue;
+              } else {
+                sock.send(m);
+              }
+            }
+          } else if (Buffer.isBuffer(m)) {
+            const { filename, chunk, nickname } = JSON.parse(m.toString());
+            
+            if (serverName !== nickname) {
+              if (!streams.hasOwnProperty(filename)) {
+                streams[filename] = fs.createWriteStream(filename);
+              }
+
+              if (is('undefined', chunk)) {
+              } else {
+                streams[filename].write(Buffer.from(Object.values(chunk)));
+              }
+            }
+
+            for (let nick in connections) {
+              const sock = connections[nick];
+              if (nick === nickname) {
+                // don't send to the same client.
+                continue;
+              } else {
+                sock.send(m);
+              }
+            }
           }
         });
       });
 
       server.on('error', () => res.status(500).send(responseBuilder('An Error Occured while creating the server.')));
-
-      server.on('message', (data) => {
-        console.log(`on server: ${data}`);
-      })
-      
       res.status(201).send(responseBuilder("Server Created", { ip: ip.address() }));
       return;
     }
   
-    // console.log(files2);
-    // console.log(inner);
     res.status(200).send(
       responseBuilder(
         "Still here",
@@ -66,44 +102,47 @@ function serverHandler(app, s, c) {
 
   // creating and connecting client to server.
   // ::self
-  app.get('/ws', function(req, res) {
+  app.put('/ws', function(req, res) {
     const { nickname, downloadFolder } = req.body;
-
+    const streams = {};
     
     // take note of the ip address.
     // const client = new WsClient('172.20.10.6:3001').connect();
     const client = new WsClient('0.0.0.0:3001').connect();
-
     client
       .on('open', () => {
-        client.send(`nickname ${nickname}`);
-        res.cookie('hermez-nickname', nickname);
+        console.log('created client on the server');
+        // client.send(`nickname ${nickname}`);
         res.status(200).send(responseBuilder("Successfully opened a client!", { nickname }));
       })
       .on('close', () => console.log('connection closed'))
       .on('error', (err) => res.status(500).send(responseBuilder(err)))
       .on('message', (data) => {
-        if (data === 'START') {
-          start = new Date();
-        } else if (data === "DONE") {
-          end = new Date();
-          console.log(`Done receiving ${filename} in ${(end-start)/1000} seconds`)
+        if (Buffer.isBuffer(data)) {
+          const { filename, chunk } = JSON.parse(data.toString());
+          streams[filename].write(Buffer.from(chunk.data));
+        } else if (data === 'START') {
+          // start = new Date();
+        } else if (is('string', data) && data.split(" ")[0] === "DONE") {
+          // end = new Date();
+          const [,fname] = data.split(" ");
+          // console.log(`Done receiving ${fname} in ${(end-start)/1000} seconds`)
+          console.log(`Done receiving ${fname}`)
           console.log();
-          writer.close();
-        } else if (typeof data === 'string') {
-          filename = data;
+          streams[fname].close();
+          delete streams[fname];
+        } else if (is('string', data)) {
+          streams[data] = fs.createWriteStream(`test-${data}`);
           writer = fs.createWriteStream(`test-${data}`);
-        } else {
-          writer.write(data);
         }
       });
-
   })
 
   // the sending facility.
   // ::self
   app.post('/ws-send', function(req, res) {
     const { filenames } = req.body;
+    let count = 0;
 
     if (!is('array', filenames)) {
       res.status(500).send(responseBuilder('The filenames property must be an array'));
@@ -118,20 +157,37 @@ function serverHandler(app, s, c) {
   
         // create a readStream using the filename
         const selectedFile = fs.createReadStream(filename);
-  
+        const transform = new Transform({
+          objectMode: true,
+          readableObjectMode: true,
+          transform(chunk, encoding, callback) {
+            const z = { filename, chunk };
+            callback(null, Buffer.from(JSON.stringify(z)));
+          }
+        })
+        
         // SEND!!.
         selectedFile
           .on("ready", () => {
             console.log(`Started sending ${filename}...`);
-            ws.send("START");
+            socket.send("START");
           })
-          .on("data", chunk => ws.send(chunk))
-          .on("close", () => {
+          .pipe(transform)
+          .on("data", chunk => {
+            count++;
+            console.log(chunk);
+            console.log(Object.prototype.toString.call(chunk))
+            socket.send(Buffer.from(chunk))
+          })
+          .on('end', () => {
+            selectedFile.close();
+            console.log(count);
             console.log(`Done sending ${filename}!`);
             console.log();
-            ws.send("DONE");
-            res.status(200).send(responseBuilder(`Successully sent ${filename}`));
+            socket.send(`DONE ${filename}`);
+            // res.status(200).send(responseBuilder(`Successully sent ${filename}`));
           });
+          // .on('close');
         return;
       }
     })

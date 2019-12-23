@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Redirect } from 'react-router-dom';
 import axios from 'axios';
@@ -38,7 +39,37 @@ const Client = (props) => {
   }
 
   const redir = () => {
-    console.log('sdfaf')
+    console.log(props);
+  }
+
+  const changeIm = (evt) => {
+    const tc = {
+      start() {},
+      async transform(chunk, controller) {
+        chunk = await chunk;
+        console.log(chunk);
+        const z = { filename, chunk };
+        controller.enqueue(Buffer.from(JSON.stringify(z)));
+      },
+      flush() {}
+    }
+
+    const file = evt.target.files[0];
+    const reader = file.stream().getReader();
+
+    reader.read().then(function bzz({ done, value }) {
+      const z = { nickname, filename: file.name, chunk: value };
+      const bbb = Buffer.from(JSON.stringify(z));
+
+      props.store.client.send(bbb);
+
+      if (done) {
+        props.store.client.send(`DONE ${nickname} ${file.name}`);
+        return;
+      }
+
+      return reader.read().then(bzz);
+    });
   }
 
   return (
@@ -53,6 +84,8 @@ const Client = (props) => {
                 <ClientHistoryEntry text="received 'fssd.mkv' from the server" />
                 <ClientHistoryEntry text="received appointment.mkv" />
               </div>
+              <input type="file"
+                id="avatar" name="avatar" onChange={changeIm}/>
             </div>
 
             {/* right */}
@@ -84,4 +117,19 @@ const Client = (props) => {
   );
 }
 
-export default withRouter(Client);
+const mapStateToProps = ({ client }) => {
+  return { store: { client } };
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    plsClient: (client) => {
+      dispatch(setClient(client));
+    }
+  }
+}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withRouter(Client));

@@ -1,7 +1,8 @@
-import { SET_DOWNLOAD_FOLDER } from '../actions'
+import { SET_DOWNLOAD_FOLDER, SET_CLIENT } from '../actions'
 
 const initialState = {
-  downloadFolder: ''
+  downloadFolder: '',
+  client: null
 }
 
 function root(state = initialState, action) {
@@ -10,6 +11,11 @@ function root(state = initialState, action) {
       return Object.assign({}, state, {
         downloadFolder: action.folder
       })
+
+    case SET_CLIENT:
+      return Object.assign({}, state, {
+        client: action.client
+      });
 
     default:
       return state;

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { connect } from "react-redux";
 import { withRouter } from 'react-router-dom';
 import { Link, Redirect } from 'react-router-dom';
-import { setDownloadFolder } from "../actions";
+import { setDownloadFolder, setClient } from "../actions";
 import Icon from '../../public/assets/info-icon.png'
 import Cog from '../../public/assets/cog.png'
 
@@ -31,7 +31,7 @@ const Home = (props) => {
   }
 
   const openServer = () => {
-    if (validate(port, 4, 'equal')) {
+    if (validate(nick, 5, 'more') && validate(port, 4, 'equal')) {
       axios.post('/ws', { port: Number.parseInt(port) })
         .then(data => {
           const ip = data.data.extra;
@@ -48,22 +48,67 @@ const Home = (props) => {
     }
   }
 
+  const blitz = () => {
+    return axios.put('/ws', { nickname: nick })
+      .then((data) => {
+        console.log(data.data);
+        setDone(1);
+        return data.data;
+      })
+      .catch(() => {})
+  }
+  
+  // browser is for sending
+  // server is for saving
   const connectClient = () => {
     if (validate(nick, 5, 'more') && validate(port, 4, 'equal')) {
-      axios.get('/ws', { nickname: nick })
-        .then((data) => {
-          console.log(data.data);
-          setDone(1);
-          return data.data;
-        })
-        .catch(() => {})
+      // create the client on the browser.
+      const c = new WebSocket(`ws://0.0.0.0:${port}`);
+      
+      c.onopen =  () => {
+        // create the second client on the server.
+        axios.put('/ws', { nickname: nick })
+          .then((data) => {
+            setDone(1);
+            return data.data;
+          })
+          .catch(() => {});
+        
+        c.send(`nickname ${nick}`);
+        props.plsSetThisClient(c);
+      };
+      
+      c.onclose = () => console.log('connection closed');
+      
+      c.onerror = (err) => console.log('error!');
+      
+      c.onmessage = (data) => {
+        console.log(data);
+        // if (Buffer.isBuffer(data)) {
+        //   const { filename, chunk } = JSON.parse(data.toString());
+        //   streams[filename].write(Buffer.from(chunk.data));
+        // } else if (data === 'START') {
+        //   // start = new Date();
+        // } else if (is('string', data) && data.split(" ")[0] === "DONE") {
+        //   // end = new Date();
+        //   const [,fname] = data.split(" ");
+        //   // console.log(`Done receiving ${fname} in ${(end-start)/1000} seconds`)
+        //   console.log(`Done receiving ${fname}`)
+        //   console.log();
+        //   streams[fname].close();
+        //   delete streams[fname];
+        // } else if (is('string', data)) {
+        //   streams[data] = fs.createWriteStream(`test-${data}`);
+        //   writer = fs.createWriteStream(`test-${data}`);
+        // }
+      }
     } else {
       // do something about the error
       // use a toast maybe??
       console.log('enter 5 or more characters!')
     }
   }
-
+            
   return (
     done === 1
       ? 
@@ -119,7 +164,7 @@ const Home = (props) => {
               <div className="py-3 pb-24 w-auto">
                 <button
                   style={{ transition: 'all .3s ease-in ' }}
-                  onClick={() => selectedMode === 0 ? openServer : connectClient}
+                  onClick={() => selectedMode === 0 ? openServer() : connectClient()}
                   className="py-3 px-8 bg-white border border-secondary rounded-lg"
                 >
                   {selectedMode === 0 ? "*flap flap*" : "*flippity flappitty*"}
@@ -147,10 +192,16 @@ const Home = (props) => {
 }
 
 const mapStateToProps = ({ downloadFolder }) => {
-  return { store: downloadFolder };
+  return { store: { downloadFolder } };
 }
 
-const mapDispatchToProps = { setDownloadFolder }
+const mapDispatchToProps = (dispatch) => {
+  return {
+    plsSetThisClient: (client) => {
+      dispatch(setClient(client));
+    }
+  }
+}
 
 export default connect(
   mapStateToProps,
