@@ -1,4 +1,5 @@
 const fs = require('fs');
+const os = require('os');
 const ip = require('ip');
 const bp = require('body-parser');
 const WsServer = require('../ws/wsServer.js');
@@ -9,7 +10,12 @@ const { Transform } = require('stream');
 let server = null;
 let connections = {};
 let serverName;
-let start, end;
+const home = os.homedir();
+let downloadFolder;
+
+function validFolder(path) {
+  return fs.existsSync(path);
+}
 
 function serverHandler(app, s, c) {
   app.use(bp.json({ type: 'application/json' }));
@@ -19,7 +25,15 @@ function serverHandler(app, s, c) {
   app.post('/ws', function(req, res) {
     const { port, nickname } = req.body;
     let streams = {};
+    const home = os.homedir();
     serverName = nickname;
+
+    if (validFolder(`${home}/Documents`) && !validFolder(`${home}/Documents/hermez`)) {
+      downloadFolder = `${home}/Documents/hermez`;
+      fs.mkdir(`${home}/Documents/hermez`, { recursive: true }, (err) => {
+        if (err) return;
+      });
+    }
 
     if (server == null) {
       server =  (new WsServer('0.0.0.0', port)).connect();
@@ -37,15 +51,21 @@ function serverHandler(app, s, c) {
                 break
             }
           } else if (is('string', m) && m === 'START') {
+            
+          } else if (is('string', m) && m.split(" ")[0] === "DELETE") {
+            const [, nickname] = m.split(" ");
+            const client = connections[nickname];
 
+            // close the connection and remove it from the list on the server.
+            client.close();
+            delete connections[nickname];
           } else if (is('string', m) && m.split(" ")[0] === "DONE") {
             const [, nickname, ...fname] = m.split(" ");
-            console.log(`Done receiving ${fname.join(" ")}`)
-            console.log();
+            const filename = fname.join(" ");
 
             if (server !== nickname) {
-              streams[fname.join(" ")].close();
-              delete streams[fname.join(" ")];
+              streams[filename].close();
+              delete streams[filename];
             }
 
             for (let nick in connections) {
@@ -61,11 +81,11 @@ function serverHandler(app, s, c) {
             
             if (serverName !== nickname) {
               if (!streams.hasOwnProperty(filename)) {
-                streams[filename] = fs.createWriteStream(filename);
+                console.log("Started receiving file...")
+                streams[filename] = fs.createWriteStream(`${home}/Documents/hermez/${filename}`);
               }
 
-              if (is('undefined', chunk)) {
-              } else {
+              if (!is('undefined', chunk)) {
                 streams[filename].write(Buffer.from(Object.values(chunk)));
               }
             }
@@ -82,8 +102,8 @@ function serverHandler(app, s, c) {
           }
         });
       });
-
       server.on('error', () => res.status(500).send(responseBuilder('An Error Occured while creating the server.')));
+      
       res.status(201).send(responseBuilder("Server Created", { ip: ip.address() }));
       return;
     }
@@ -103,37 +123,40 @@ function serverHandler(app, s, c) {
   // creating and connecting client to server.
   // ::self
   app.put('/ws', function(req, res) {
-    const { nickname, downloadFolder } = req.body;
+    const { nickname } = req.body;
     const streams = {};
     
+    if (validFolder(`${home}/Documents`) && !validFolder(`${home}/Documents/hermez`)) {
+      downloadFolder = `${home}/Documents/hermez`;
+      fs.mkdir(`${home}/Documents/hermez`, { recursive: true }, () => {
+        if (err) return;
+      });
+    }
+
     // take note of the ip address.
     // const client = new WsClient('172.20.10.6:3001').connect();
     const client = new WsClient('0.0.0.0:3001').connect();
     client
       .on('open', () => {
         console.log('created client on the server');
-        // client.send(`nickname ${nickname}`);
+        client.send(`nickname ${nickname}`);
         res.status(200).send(responseBuilder("Successfully opened a client!", { nickname }));
       })
-      .on('close', () => console.log('connection closed'))
+      .on('close', () => console.log('connection closed on server'))
       .on('error', (err) => res.status(500).send(responseBuilder(err)))
       .on('message', (data) => {
         if (Buffer.isBuffer(data)) {
           const { filename, chunk } = JSON.parse(data.toString());
           streams[filename].write(Buffer.from(chunk.data));
         } else if (data === 'START') {
-          // start = new Date();
         } else if (is('string', data) && data.split(" ")[0] === "DONE") {
-          // end = new Date();
-          const [,fname] = data.split(" ");
-          // console.log(`Done receiving ${fname} in ${(end-start)/1000} seconds`)
-          console.log(`Done receiving ${fname}`)
+          const [,, ...fname] = data.split(" ");
+          console.log(`Done receiving ${fname.join(" ")}`)
           console.log();
-          streams[fname].close();
-          delete streams[fname];
+          streams[fname.join(" ")].close();
+          delete streams[fname.join(" ")];
         } else if (is('string', data)) {
-          streams[data] = fs.createWriteStream(`test-${data}`);
-          writer = fs.createWriteStream(`test-${data}`);
+          streams[data] = fs.createWriteStream(`${home}/Documents/hermez/${filename}`);
         }
       });
   })
@@ -193,25 +216,6 @@ function serverHandler(app, s, c) {
     })
   })
 
-  // random route.
-  app.get('/wz', function(req, res) {
-    console.log(res.get('hermez-nickname'));
-    res.status(200).send({ message: res.get('hermez-nickname') })
-  })
-
-  // disconnecting clients...
-  // deleting the clients... i.e updating the server table.
-  // ::cross
-  app.patch('/ws', function(req, res) {
-    const { nickname } = req.body;
-    const client = connections[nickname];
-
-    // close the connection and remove it from the list on the server.
-    client.close();
-    delete connections[nickname];
-    res.status(200).send(responseBuilder(`Successfully deleted the client ${nickname}.`))
-  })
-
   // deleting the server.
   // ::self
   app.delete('/ws', function(req, res) {
@@ -223,7 +227,7 @@ function serverHandler(app, s, c) {
     server.close();
     server = null;
     connections = {};
-    app.set('hermez-server', null);
+    
     res.send({
       status: 200,
       message: 'Successfully deleted the server.',

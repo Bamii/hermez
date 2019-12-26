@@ -6,6 +6,7 @@ import { Link, Redirect } from 'react-router-dom';
 import { setDownloadFolder, setClient } from "../actions";
 import Icon from '../../public/assets/info-icon.png'
 import Cog from '../../public/assets/cog.png'
+import { validate } from '../utils/toolbox';
 
 const Home = (props) => {
   const [selectedMode, setMode] = useState(0);
@@ -14,30 +15,18 @@ const Home = (props) => {
   const [done, setDone] = useState(0);
   const [ipAdd, setIp] = useState("");
 
-  const validate = (input, limit, operator) => {
-    switch(operator) {
-      case 'less':
-        return input.length <= limit;
-        break;
-
-      case 'more':
-        return input.length >= limit;
-        break;
-
-      case 'equal':
-        return input.length === limit;
-        break;
-    }
-  }
-
   const openServer = () => {
     if (validate(nick, 5, 'more') && validate(port, 4, 'equal')) {
-      axios.post('/ws', { port: Number.parseInt(port) })
+      axios.post('/ws', { port: Number.parseInt(port), nickname: nick })
         .then(data => {
-          const ip = data.data.extra;
-          setIp(ip);
-          setDone(1);
-          // return data.data;
+          const { ip } = data.data.extra;
+          
+          setIp(`${ip}:${port}`);
+          connectDesktopClient(`0.0.0.0:${port}`, (c) => {
+            props.plsSetThisClient(c);
+            setDone(1);
+          });
+          return data.data;
         })
         .catch(() => {
           // do something about the error.
@@ -48,65 +37,38 @@ const Home = (props) => {
     }
   }
 
-  const blitz = () => {
-    return axios.put('/ws', { nickname: nick })
-      .then((data) => {
-        console.log(data.data);
-        setDone(1);
-        return data.data;
-      })
-      .catch(() => {})
+  const connectClient = () => {
+    if (validate(nick, 5, 'more')) {
+      axios.put('/ws', { nickname: nick })
+        .then((data) => {
+          setIp(port);
+          connectDesktopClient(`${port}`, (c) => {
+            props.plsSetThisClient(c);
+            setDone(1);
+          });
+          return data.data;
+        })
+        .catch(() => {});
+    } else {
+
+    }
   }
   
   // browser is for sending
   // server is for saving
-  const connectClient = () => {
-    if (validate(nick, 5, 'more') && validate(port, 4, 'equal')) {
-      // create the client on the browser.
-      const c = new WebSocket(`ws://0.0.0.0:${port}`);
-      
-      c.onopen =  () => {
-        // create the second client on the server.
-        axios.put('/ws', { nickname: nick })
-          .then((data) => {
-            setDone(1);
-            return data.data;
-          })
-          .catch(() => {});
-        
-        c.send(`nickname ${nick}`);
-        props.plsSetThisClient(c);
-      };
-      
-      c.onclose = () => console.log('connection closed');
-      
-      c.onerror = (err) => console.log('error!');
-      
-      c.onmessage = (data) => {
-        console.log(data);
-        // if (Buffer.isBuffer(data)) {
-        //   const { filename, chunk } = JSON.parse(data.toString());
-        //   streams[filename].write(Buffer.from(chunk.data));
-        // } else if (data === 'START') {
-        //   // start = new Date();
-        // } else if (is('string', data) && data.split(" ")[0] === "DONE") {
-        //   // end = new Date();
-        //   const [,fname] = data.split(" ");
-        //   // console.log(`Done receiving ${fname} in ${(end-start)/1000} seconds`)
-        //   console.log(`Done receiving ${fname}`)
-        //   console.log();
-        //   streams[fname].close();
-        //   delete streams[fname];
-        // } else if (is('string', data)) {
-        //   streams[data] = fs.createWriteStream(`test-${data}`);
-        //   writer = fs.createWriteStream(`test-${data}`);
-        // }
-      }
-    } else {
-      // do something about the error
-      // use a toast maybe??
-      console.log('enter 5 or more characters!')
-    }
+  const connectDesktopClient = (host, cb) => {
+    // create the client on the browser.
+    const c = new WebSocket(`ws://${host}`);
+    
+    c.onopen =  () => {
+      // create the second client on the server.
+      cb(c);
+    };
+    
+    c.onclose = () => console.log('connection closed');
+    
+    c.onerror = (err) => console.log('error!');
+    return c;
   }
             
   return (
@@ -115,8 +77,12 @@ const Home = (props) => {
         <Redirect
           push
           to={{
-            pathname: selectedMode === 0 ? "/host" : "/client",
-            state: { ip: ipAdd, nickname: nick }
+            pathname: "/client",
+            state: {
+              ip: ipAdd,
+              nickname: nick,
+              mode: selectedMode === 0 ? 'server' : 'client'
+            }
           }}
         />
       :

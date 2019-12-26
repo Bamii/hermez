@@ -28,9 +28,27 @@ const responseBuilder = (message, extra) => {
   }
 }
 
+const validate = (input, limit, operator) => {
+  switch(operator) {
+    case 'less':
+      return input.length <= limit;
+      break;
+
+    case 'more':
+      return input.length >= limit;
+      break;
+
+    case 'equal':
+      return input.length === limit;
+      break;
+  }
+}
+
+
 module.exports = {
   is,
   getType,
   flatten,
+  validate,
   responseBuilder,
 };
