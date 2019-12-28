@@ -26,15 +26,15 @@ function main() {
   console.log();
 
   // function to serve each item on the menu.
-  function serveMenu(topMenuOption) {
-    switch(topMenuOption) {
+  function serveMenu(option) {
+    switch(option) {
       case "1":
         const WsServer = require('./ws/wsServer');
 
         const port = getInputFromUser("Please enter the port you'll like to use: ");
         // now to find the ipaddress... hehe
         console.log(port);
-        const server = (new WsServer('localhost', port)).connect();
+        const server = (new WsServer('0.0.0.0', port)).connect();
         
         server
           .on('listening', (ws) => {
@@ -60,13 +60,11 @@ function main() {
               const filename = getInputFromUser('Enter an option\n(enter "m" to disconnect and go back to the menu):');
 
               if (filename === "m") {
-                server.close(() => {
-                  main();
-                });
+                server.close(() => main());
               } else {
-                sendFile({ files, ws, filename }, () =>  sendThisFilePlease());
+                sendFile({ files, ws, filename: filename - 1 }, () =>  sendThisFilePlease());
               }
-            })()
+            })();
           });
         break;
 
@@ -85,10 +83,6 @@ function main() {
             console.log("-----------------------------------------")
             console.log("* up, up, and away!!!")
             console.log("-----------------------------------------")
-            // console.log("Here's a list of the files in this directory.")
-            // fs
-            //   .readdirSync('.', { withFileTypes: true })
-            //   .forEach((file, index) => console.log(`[${index+1}] ${file.name}`));
           })
           .on('close', () => {
             main();

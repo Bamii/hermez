@@ -2,3 +2,7 @@
 /garb
 test-*
 /new-index
+/garbage
+.DS_Store
+/frontend
+/new-index
