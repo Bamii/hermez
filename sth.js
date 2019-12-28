@@ -1,7 +1,7 @@
 const WsServer = require("./ws/wsServer");
 const EventEmitter = require("events");
-
 /*
+
 function anon() {
   const port = getInputFromUser("Please enter the port you'll like to use: ");
   // now to find the ipaddress... hehe
@@ -48,7 +48,6 @@ function anon() {
     });
 }
 */
-
 class Server {
   constructor(host, port) {
     this._host = host;

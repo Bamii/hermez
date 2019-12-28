@@ -105,7 +105,9 @@ function cls() {
 
 function sendFile({ files, ws, filename }, cb) {
   // sends the filename to the client;
+
   const fl = files.map(file => file.name)[filename];
+
   ws.send(fl);
 
   // create a readStream using the filename

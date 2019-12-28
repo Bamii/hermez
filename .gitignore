@@ -5,3 +5,4 @@ test-*
 /garbage
 .DS_Store
 /frontend
+/new-index
